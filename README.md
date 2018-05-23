@@ -1,30 +1,36 @@
-This repo contains sample Akka Cluster app integrated with amalgam8.
+This repo contains sample Akka Cluster app integrated with Amalgam8's Registry.
 
-# How to run Akka Cluster on CloudFoundry
+# How to run Akka Cluster on Pivotal Cloud Foundry (PCF)
 
-This is a short guide to walk you through how to deploy and run Akka Cluster based application on [CloudFoundry](https://www.cloudfoundry.org/)
+This is a short guide to walk you through how to deploy and run Akka Cluster based application on [Pivotal Cloud Foundry (PCF)](https://pivotal.io/platform)
 
-**Note:** Akka with no Remoting / Cluster can run on Cloud Foundry with no additional requirement. This article deals with cases when Remoting / Cluster features are used.
+**Note:** Akka with no Remoting / Cluster can run on PCF with no additional requirement. This article deals with cases when Remoting / Cluster features are used.
 
-**Background:** [Akka Cluster](http://doc.akka.io/docs/akka/snapshot/scala/cluster-usage.html) is based on TCP communication or optionally can use UDP instead in Akka version >= 2.4.11. However, the current CloudFoundry release [v245](https://github.com/cloudfoundry/cf-release/releases/tag/v245) doesn't support container-to-container TCP or UDP based communication. The develop branch of [Container Networking for Garden-RunC](https://github.com/cloudfoundry-incubator/netman-release) plugin contains support for this type of communication on CloudFoundry with fixed port numbers (Pivotal plans to support port number ranges in the future). In this guide we will use this experimential plugin to show how to run Akka Cluster that uses TCP. In case of UDP, setting `canonical.port` ([2.4.11 release notes](http://akka.io/news/2016/09/30/akka-2.4.11-released.html)) will make UDP based Akka Cluster usable on CloudFoundry as well.
+**Background:** [Akka Cluster](http://doc.akka.io/docs/akka/snapshot/scala/cluster-usage.html) is based on TCP communication or optionally can use UDP instead in Akka version >= 2.4.11. PCF's standard container-to-container (C2C) mechanism allows apps talking to other apps via TCP or UDP; however, the ingress traffic to the entry point application supports only HTTP(S) and TCP.
+
+In this guide we will use this PCF C2C feature to show how to run Akka Cluster that uses TCP. 
+
+**TO DO:** In case of UDP, setting `canonical.port` ([2.4.11 release notes](http://akka.io/news/2016/09/30/akka-2.4.11-released.html)) will make a UDP-based Akka Cluster usable on PCF as well.
+
+## Prerequisites
+The following instructions for this example assume the following:
+- [This git repo](https://github.com/gtantachuco-pivotal/akka-sample-cluster-on-cloudfoundry/edit/master/README.md) cloned somewhere
+- [The CF Networking Release git repo](https://github.com/gtantachuco-pivotal/cf-networking-release) cloned somewhere
+- [jq](https://stedolan.github.io/jq/download/)
+- A Pivotal Cloud Foundry  foundation: 1.10 or higher
+
+## Why do we need Amalgam8's Registry?
+With Akka Clusters, every node should know IPs/hostnames and ports of [cluster seed nodes](http://doc.akka.io/docs/akka/current/scala/cluster-usage.html#Joining_to_Seed_Nodes). Containers in PCF have dynamic IPs making it difficult to manage a list of static IPs for seed nodes. One possible way to bootstrap a cluster is when the first node joins itself and publishes its IP in a Shared Registry that is accessible to the rest of nodes. More nodes can register themselves as seed nodes later. Solutions include using [etcd](https://github.com/coreos/etcd) directly or via [ConstructR](https://github.com/hseeberger/constructr) that utilizes `etcd` as Akka extension. We used [amalgam8](https://github.com/amalgam8/amalgam8/tree/master/registry) because you can deploy it as a Go app in PCF. 
+**NOTE:** While it works for proof-of-concept implementation, amalgam8 can not be used in production "as is" since simultaneous seed nodes registration with amalgam8 has high chances of forming multiple separated cluster.
+
+## Deploy Amalgam8's Registry to PCF
 
 
-**Note:** For this guide we installed Cloud Foundry **locally** using [bosh-lite](https://github.com/cloudfoundry-incubator/netman-release/blob/develop/README.md#deploy-to-bosh-lite). CI deployment scripts and config for AWS provided by CloudFoundry can be found [here](https://github.com/cloudfoundry-incubator/container-networking-ci).
 
+## Deploying Akka application
 
-**Installing CloudFoundry components:**
+You can deploy Akka application by using your foundation's [java-buildpack](https://github.com/cloudfoundry/java-buildpack.git). Our sample application is inspired by [akka-sample-cluster](https://github.com/akka/akka/tree/master/akka-samples/akka-sample-cluster-scala)). It has backend nodes that calculate factorial upon receiving messages from frontend nodes. Frontend nodes also expose HTTP interface `GET <frontend-hostname>/info` that shows number of jobs completed.
 
-Both development environment for BOSH and container networking plugin are works in progress, thus we advise to follow their respective latest documentation for installation instructions. In our case we used develop branch as of September 28th, 2016.
-
-**Enabling container-to-container networking**
-
-By default, there is no network access between different containers. CloudFoundry provides a sample application [Cats-and-Dogs](https://github.com/cloudfoundry-incubator/netman-release/tree/master/src/example-apps/cats-and-dogs) that contains instructions how to enable the access on a per port basis.
-
-**Deploying Akka application** 
-
-You can deploy Akka application by using [java-buildpack](https://github.com/cloudfoundry/java-buildpack.git). Our sample application is inspired by [akka-sample-cluster](https://github.com/akka/akka/tree/master/akka-samples/akka-sample-cluster-scala)). It has backend nodes that calculate factorial upon receiving messages from frontend nodes. Frontend nodes also expose HTTP interface `GET <frontend-hostname>/info` that shows number of jobs completed.
-
-**Background:** with Akka Cluster every node should know IPs/hostnames and ports of [cluster seed nodes](http://doc.akka.io/docs/akka/current/scala/cluster-usage.html#Joining_to_Seed_Nodes). Containers in Cloud Foundry have dynamic IPs making it impossible to manage a list of static IPs for seed nodes. One possible way to bootstrap a cluster is when the first node joins itself and publishes its IP in some sort of shared registry that is accessible to the rest of nodes. More nodes can register themselves as seed nodes later. Cloud Foundry doesn't have any type of Service Registry built-in. Some of the solutions could be to use [etcd](https://github.com/coreos/etcd) directly or via [ConstructR](https://github.com/hseeberger/constructr) that utilizes etcd as Akka extension. We used [amalgam8](https://github.com/amalgam8/amalgam8/tree/master/registry) because Cloud Foundry provides an easy way to install amalgam8 on bosh-lite. While it works for proof-of-concept implementation, amalgam8 can not be used in production as is since simultaneous seed nodes registration with amalgam8 has high chances of forming multiple separated cluster.
 
 - Clone sample application: from [here](https://github.com/katrinsharp/akka-sample-cluster-on-cloudfoundry).
 - Compile and package sample components:
