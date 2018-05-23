@@ -39,7 +39,7 @@ cf target -o...
 ## Deploy Amalgam8's Registry to PCF
 - Go to your local repo's folder 
 ```
-cf-networking-release/src/example-apps/registry/
+cd cf-networking-release/src/example-apps/registry/
 ```
 - Push the registry app: 
 ```
@@ -50,7 +50,10 @@ cf push registry
 
 You can deploy Akka application by using your foundation's [java-buildpack](https://github.com/cloudfoundry/java-buildpack.git). Our sample application is inspired by [akka-sample-cluster](https://github.com/akka/akka/tree/master/akka-samples/akka-sample-cluster-scala)). It has backend nodes that calculate factorial upon receiving messages from frontend nodes. Frontend nodes also expose HTTP interface `GET <frontend-hostname>/info` that shows number of jobs completed.
 
-- Go to your local repo's folder `akka-sample-cluster-on-cloudfoundry/akka-sample-cluster/`
+- Go to your local repo's folder 
+```
+cd akka-sample-cluster-on-cloudfoundry/akka-sample-cluster/
+```
 - Compile and package both Akka backend and frontend components:
 ```
 sbt backend:assembly # backend
