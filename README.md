@@ -59,9 +59,17 @@ cd akka-sample-cluster-on-cloudfoundry/akka-sample-cluster/
 sbt backend:assembly # backend
 sbt frontend:assembly # frontend
 ```
-- Deploy sample Akka backend: with `--no-route` and `--health-check-type none` options since backend doesn't expose any HTTP ports: 
+- Deploy, but do not start yet, sample Akka backend: with `--no-route` and `--health-check-type none` options since backend doesn't expose any HTTP ports: 
 ```
-cf push --no-route --health-check-type none sample-akka-cluster-backend -p target/scala-2.11/akka-sample-backend.jar -b java_buildpack_offline
+cf push --no-start --no-route --health-check-type none sample-akka-cluster-backend -p target/scala-2.11/akka-sample-backend.jar -b java_buildpack_offline
+```
+- Tell the backend app where to find your Amalgam8 Registry via this PCF environment variable `REGISTRY_BASE_URL`
+```
+cf set-env tick REGISTRY_BASE_URL "http://registry.<YOUR_PCF_APP_DOMAIN>"
+```
+- Start the backend app:
+```
+cf start sample-akka-cluster-backend
 ```
 - If for some reason the backend app cannot talk to itself via the TCP:2551 port, add this network policy: 
 ```
