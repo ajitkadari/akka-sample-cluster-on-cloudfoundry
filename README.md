@@ -65,7 +65,7 @@ cf push --no-start --no-route --health-check-type none sample-akka-cluster-backe
 ```
 - Tell the backend app where to find your Amalgam8 Registry via this PCF environment variable `REGISTRY_BASE_URL`
 ```
-cf set-env tick REGISTRY_BASE_URL "http://registry.<YOUR_PCF_APP_DOMAIN>"
+cf set-env sample-akka-cluster-backend REGISTRY_BASE_URL "http://registry.<YOUR_PCF_APP_DOMAIN>"
 ```
 - Start the backend app:
 ```
