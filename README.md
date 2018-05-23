@@ -15,7 +15,7 @@ In this guide we will use this PCF C2C feature to show how to run Akka Cluster t
 ## Prerequisites
 The following instructions for this example assume the following:
 - [This git repo](https://github.com/gtantachuco-pivotal/akka-sample-cluster-on-cloudfoundry) cloned somewhere
-- [The CF Networking Release git repo](https://github.com/gtantachuco-pivotal/cf-networking-release) cloned somewhere
+- [The CF Networking Release git repo](https://github.com/cloudfoundry/cf-networking-release) cloned somewhere
 - [jq](https://stedolan.github.io/jq/download/)
 - A Pivotal Cloud Foundry  foundation: 1.10 or higher
 
