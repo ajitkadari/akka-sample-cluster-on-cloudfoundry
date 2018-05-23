@@ -27,12 +27,24 @@ Solutions include using [etcd](https://github.com/coreos/etcd) directly or via [
 **NOTE:** While it works for proof-of-concept implementation, amalgam8 **must not** be used in production "as is" since simultaneous seed nodes registration with amalgam8 has high chances of forming multiple separated cluster.
 
 ## Get ready to deploy apps to PCF
-- Login to PCF: `cf login...`
-- Target the org and space where you want to deploy your apps: `cf target -o...`
+- Login to PCF: 
+```
+cf login...
+```
+- Target the org and space where you want to deploy your apps: 
+```
+cf target -o...
+```
 
 ## Deploy Amalgam8's Registry to PCF
-- Go to your local repo's folder `cf-networking-release/src/example-apps/registry/`
-- Push the registry app: `cf push registry`
+- Go to your local repo's folder 
+```
+cf-networking-release/src/example-apps/registry/
+```
+- Push the registry app: 
+```
+cf push registry
+```
 
 ## Deploying Akka application
 
@@ -45,22 +57,45 @@ sbt backend:assembly # backend
 sbt frontend:assembly # frontend
 ```
 - Deploy sample Akka backend: with `--no-route` and `--health-check-type none` options since backend doesn't expose any HTTP ports: 
-`cf push --no-route --health-check-type none sample-akka-cluster-backend -p target/scala-2.11/akka-sample-backend.jar -b java_buildpack_offline`
-- If for some reason the backend app cannot talk to itself via the TCP:2551 port, add this network policy: `cf add-network-policy sample-akka-cluster-backend --destination-app sample-akka-cluster-backend --port 2551 --protocol tcp`
-- Check the log to see that first node joined itself: `cf logs sample-akka-cluster-backend`
+```
+cf push --no-route --health-check-type none sample-akka-cluster-backend -p target/scala-2.11/akka-sample-backend.jar -b java_buildpack_offline
+```
+- If for some reason the backend app cannot talk to itself via the TCP:2551 port, add this network policy: 
+```
+cf add-network-policy sample-akka-cluster-backend --destination-app sample-akka-cluster-backend --port 2551 --protocol tcp
+```
+- Check the log to see that first node joined itself: 
+```
+cf logs sample-akka-cluster-backend
+```
 - **IMPORTANT:** To prevent cluster split, verify that the first node is running before scaling it. 
-- Scale backend to 2 instances: `cf scale sample-akka-cluster-backend -i 2`
+- Scale backend to 2 instances: 
+```
+cf scale sample-akka-cluster-backend -i 2
+```
 
-- Deploy but don't start yet the sample Akka frontend: `cf push sample-akka-cluster-frontend --no-start -p target/scala-2.11/akka-sample-frontend.jar -b  java_buildpack_offline`
-- Add this network policy to allow frontend app to communicate with backend app cannot via backend's TCP:2551 port: `cf add-network-policy sample-akka-cluster-frontend --destination-app sample-akka-cluster-backend --port 2551 --protocol tcp`
-- Start the fronted app: `cf start sample-akka-cluster-frontend`
+- Deploy but don't start yet the sample Akka frontend: 
+```
+cf push sample-akka-cluster-frontend --no-start -p target/scala-2.11/akka-sample-frontend.jar -b  java_buildpack_offline
+```
+- Add this network policy to allow frontend app to communicate with backend app cannot via backend's TCP:2551 port: 
+```
+cf add-network-policy sample-akka-cluster-frontend --destination-app sample-akka-cluster-backend --port 2551 --protocol tcp
+```
+- Start the fronted app: 
+```
+cf start sample-akka-cluster-frontend
+```
 - In separate windows or terminal sessions, check logs from both frontend and backend to ensure all client/server and server-to-server communications are working fine: 
 ```
 cf logs sample-akka-cluster-backend
 cf logs sample-akka-cluster-frontend
 ```
 
-- Verify that it works: `curl sample-akka-cluster-frontend.<YOUR_PCF_DOMAIN>/info`
+- Verify that it works: 
+```
+curl sample-akka-cluster-frontend.<YOUR_PCF_DOMAIN>/info
+```
 - If all is working, it should show the number of completed jobs
 
 ## Summary
