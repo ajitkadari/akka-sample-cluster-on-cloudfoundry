@@ -101,6 +101,11 @@ cf push sample-akka-cluster-frontend --no-start -p target/scala-2.11/akka-sample
 ```
 cf add-network-policy sample-akka-cluster-frontend --destination-app sample-akka-cluster-backend --port 2551 --protocol tcp
 ```
+- Tell the frontend app where to find your Amalgam8 Registry via this PCF environment variable `REGISTRY_BASE_URL`
+```
+cf set-env sample-akka-cluster-frontend REGISTRY_BASE_URL "http://registry.<YOUR_PCF_APP_DOMAIN>"
+```
+
 - Start the fronted app: 
 ```
 cf start sample-akka-cluster-frontend
