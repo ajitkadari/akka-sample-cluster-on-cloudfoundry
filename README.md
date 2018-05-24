@@ -46,7 +46,7 @@ cd cf-networking-release/src/example-apps/registry/
 cf push registry
 ```
 
-## Deploying Akka application
+## Build the Akka application
 
 You can deploy Akka application by using your foundation's [java-buildpack](https://github.com/cloudfoundry/java-buildpack.git). Our sample application is inspired by [akka-sample-cluster](https://github.com/akka/akka/tree/master/akka-samples/akka-sample-cluster-scala)). It has backend nodes that calculate factorial upon receiving messages from frontend nodes. Frontend nodes also expose HTTP interface `GET <frontend-hostname>/info` that shows number of jobs completed.
 
@@ -59,6 +59,8 @@ cd akka-sample-cluster-on-cloudfoundry/akka-sample-cluster/
 sbt backend:assembly # backend
 sbt frontend:assembly # frontend
 ```
+## Deploying Akka backend application
+
 - Deploy, but do not start yet, sample Akka backend: with `--no-route` and `--health-check-type none` options since backend doesn't expose any HTTP ports: 
 ```
 cf push --no-start --no-route --health-check-type none sample-akka-cluster-backend -p target/scala-2.11/akka-sample-backend.jar -b java_buildpack_offline
@@ -84,8 +86,14 @@ cf logs sample-akka-cluster-backend
 ```
 cf scale sample-akka-cluster-backend -i 2
 ```
+- See details of backend app instances registered in the Amalgam8 registry
+```
+curl -s registry.<YOUR_PCF_APP_DOMAIN>/api/v1/instances | jq .
+```
 
-- Deploy but don't start yet the sample Akka frontend: 
+## Deploying Akka frontend application
+
+- Deploy, but don't start yet, the sample Akka frontend: 
 ```
 cf push sample-akka-cluster-frontend --no-start -p target/scala-2.11/akka-sample-frontend.jar -b  java_buildpack_offline
 ```
