@@ -1,7 +1,6 @@
 package sample.cluster.factorial
 
-import java.net.NetworkInterface
-import java.net.InetAddress
+import java.net.{InetAddress, NetworkInterface, URLEncoder}
 
 import scala.collection.JavaConversions._
 import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
@@ -23,6 +22,12 @@ object NetworkConfig {
         getOrElse("127.0.0.1")
 
   def serviceInstanceIp = Option(System.getenv("CF_INSTANCE_IP"))
+
+// Amalgam8 Registry's full URL
+  def registryBaseUrl = System.getenv("REGISTRY_BASE_URL")
+  def registryApiLink: String = "/api/v1/instances"
+  def registryParameter: String = "?service_name=cluster-seed"
+  def registryHeartBeat: String = "/heartbeat"
 
   def seedNodesIps: Seq[String] = Option(System.getenv("SEED_DISCOVERY_SERVICE")).
       map(InetAddress.getAllByName(_).map(_.getHostAddress).toSeq).
@@ -58,13 +63,13 @@ object NetworkConfig {
     }
 
   def queryServiceInstances = {
-    val resp = Http("http://registry.bosh-lite.com/api/v1/instances?service_name=cluster-seed")
+    val resp = Http(registryBaseUrl + registryApiLink + registryParameter)
       .option(HttpOptions.readTimeout(10000)).asString
     (Json.parse(resp.body) \\ "value").map(_.as[String])
   }
 
   def registerService(ip: String, port: Int)(implicit context: ExecutionContext): Future[String] = {
-    Future(Http("http://registry.bosh-lite.com/api/v1/instances")
+    Future(Http(registryBaseUrl + registryApiLink)
       .postData(
         s"""{
           |"service_name": "cluster-seed",
@@ -80,7 +85,7 @@ object NetworkConfig {
   }
 
   def heartbeat(id: String)(implicit context: ExecutionContext): Future[String] = {
-    Future(Http(s"http://registry.bosh-lite.com/api/v1/instances/$id/heartbeat")
+    Future(Http(registryBaseUrl + registryApiLink + "/" + id + registryHeartBeat)
       .put("")
       .header("Content-Type", "application/json")
       .header("Charset", "UTF-8")
