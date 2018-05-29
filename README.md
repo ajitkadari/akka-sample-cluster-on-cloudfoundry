@@ -10,8 +10,6 @@ This is a short guide to walk you through how to deploy and run Akka Cluster-bas
 
 In this guide we will use this PCF C2C feature to show how to run Akka Cluster that uses TCP. 
 
-**TO DO:** In case of UDP, setting `canonical.port` ([2.4.11 release notes](http://akka.io/news/2016/09/30/akka-2.4.11-released.html)) will make a UDP-based Akka Cluster usable on PCF as well.
-
 ## Prerequisites
 The following instructions for this example assume the following:
 - [This git repo](https://github.com/gtantachuco-pivotal/akka-sample-cluster-on-cloudfoundry) cloned somewhere
